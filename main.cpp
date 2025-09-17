@@ -31,7 +31,7 @@ const float time_step = 0.017f;
 Vector2f ballVel;
 bool player1Serve = true;
 const int iniVel = 200.f;
-const float velMult = 1.1f;
+const float velMult = 1.05f;
 const int minXSpd = 70;
 
 //game objects
@@ -57,27 +57,7 @@ void resetBall()
 	player1Serve = !player1Serve;
 }
 
-void init()
-{
-	//set paddle size and origin
-	for (RectangleShape &p : paddles)
-	{
-		p.setSize(paddleSize);
-		p.setOrigin(paddleSize/2.f);
-	}
-
-	//set ball size and origin
-	ball.setRadius(ballRad);
-	ball.setOrigin(ballRad,ballRad);
-
-	//set paddle pos
-	paddles[0].setPosition(paddleOffsetWall + paddleSize.x/2.f, gameHeight/2.f);
-	paddles[1].setPosition(gameWidth-paddleOffsetWall-paddleSize.x/2.f, gameHeight/2.f);
-
-	resetBall();
-}
-
-void update(float dt) 
+void paddleMovement(float dt)
 {
 	//player 1 movement
 	float dir = 0.f;
@@ -103,9 +83,16 @@ void update(float dt)
 	}
 	paddles[1].move(Vector2f(0.f, dir * paddleSpd * dt));
 
-	//ball movement
-	ball.move(ballVel * dt);
+	//lock to scrn
+	for (RectangleShape &p : paddles)
+	{
+		Vector2f curpos = p.getPosition();
+		p.setPosition(curpos.x, fmin(fmax(curpos.y, paddleSize.y/2.f), gameHeight-paddleSize.y/2.f));
+	}
+}
 
+void collisions()
+{
 	//ball collision
 	const Vector2f curPos = ball.getPosition();
 
@@ -127,32 +114,60 @@ void update(float dt)
 		resetBall();
 	}
 
-	const Vector2f pad1Pos = paddles[0].getPosition();
-	const Vector2f pad2Pos = paddles[1].getPosition();
-
-	if (//left paddle
-		curPos.x - ballRad < pad1Pos.x + paddleSize.x/2.f &&
-		curPos.x + ballRad > pad1Pos.x - paddleSize.x/2.f &&
-		curPos.y - ballRad < pad1Pos.y + paddleSize.y/2.f &&
-		curPos.y + ballRad > pad1Pos.y - paddleSize.y/2.f
+	//paddle collision
+	for (int i = 0; i < 2; i++)
+	{
+		Vector2f padPos = paddles[i].getPosition();
+		if (
+		curPos.x - ballRad < padPos.x + paddleSize.x/2.f &&
+		curPos.x + ballRad > padPos.x - paddleSize.x/2.f &&
+		curPos.y - ballRad < padPos.y + paddleSize.y/2.f &&
+		curPos.y + ballRad > padPos.y - paddleSize.y/2.f
 	)
 	{
 		ballVel *= velMult;
 		ballVel.x *= -1;
-		ball.move(Vector2f((pad1Pos.x+paddleSize.x/2.f+ballRad)-curPos.x,0.f));
+
+		if (i == 0)
+		{
+			ball.move(Vector2f((padPos.x+paddleSize.x/2.f+ballRad)-curPos.x,0.f));
+		}
+		else
+		{
+			ball.move(Vector2f((padPos.x-paddleSize.x/2.f-ballRad)-curPos.x,0.f));
+		}
+	}
+	}
+}
+
+void init()
+{
+	//set paddle size and origin
+	for (RectangleShape &p : paddles)
+	{
+		p.setSize(paddleSize);
+		p.setOrigin(paddleSize/2.f);
 	}
 
-	if (//right paddle
-		curPos.x - ballRad < pad2Pos.x + paddleSize.x/2.f &&
-		curPos.x + ballRad > pad2Pos.x - paddleSize.x/2.f &&
-		curPos.y - ballRad < pad2Pos.y + paddleSize.y/2.f &&
-		curPos.y + ballRad > pad2Pos.y - paddleSize.y/2.f
-	)
-	{
-		ballVel *= velMult;
-		ballVel.x *= -1;
-		ball.move(Vector2f((pad2Pos.x-paddleSize.x/2.f-ballRad)-curPos.x,0.f));
-	}
+	//set ball size and origin
+	ball.setRadius(ballRad);
+	ball.setOrigin(ballRad,ballRad);
+
+	//set paddle pos
+	paddles[0].setPosition(paddleOffsetWall + paddleSize.x/2.f, gameHeight/2.f);
+	paddles[1].setPosition(gameWidth-paddleOffsetWall-paddleSize.x/2.f, gameHeight/2.f);
+
+	resetBall();
+}
+
+void update(float dt) 
+{
+	paddleMovement(dt);
+
+	//ball movement
+	ball.move(ballVel * dt);
+
+	collisions();
 }
 
 void render(RenderWindow &window) 
