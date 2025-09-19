@@ -38,6 +38,28 @@ const int minXSpd = 70;
 CircleShape ball;
 RectangleShape paddles[2];
 
+bool inRange(float range, Vector2f pos1, Vector2f pos2)
+{
+	Vector2f diff = pos1 - pos2;
+	float dist = sqrt(pow(diff.x, 2) + pow(diff.y, 2));
+
+	if (dist <= range)
+	{
+		return true;
+	}
+	return false;
+}
+
+bool TimeSlow(float range)
+{
+	if (inRange(range, ball.getPosition(), paddles[0].getPosition()))
+	{
+		return true;
+	}
+
+	return inRange(range, ball.getPosition(), paddles[1].getPosition());
+}
+
 void resetBall()
 {
 	//set ball pos
@@ -93,7 +115,7 @@ void paddleMovement(float dt)
 
 void collisions()
 {
-	//ball collision
+	//screen collision
 	const Vector2f curPos = ball.getPosition();
 
 	if (curPos.y > gameHeight - ballRad) //bottom
@@ -162,6 +184,11 @@ void init()
 
 void update(float dt) 
 {
+	if(TimeSlow(70.f))
+	{
+		dt *= 0.5f;
+	}
+
 	paddleMovement(dt);
 
 	//ball movement
