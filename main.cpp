@@ -4,6 +4,7 @@
 #include <cstdlib> //for rand
 #include <ctime> //for seeding rand
 #include <cmath> 
+#include <string> //for score concat
 
 //namespaces
 using namespace sf;
@@ -33,10 +34,19 @@ bool player1Serve = true;
 const int iniVel = 200.f;
 const float velMult = 1.05f;
 const int minXSpd = 70;
+Font font;
+int score[2];
 
 //game objects
 CircleShape ball;
 RectangleShape paddles[2];
+Text scoreTxt;
+
+void updateScoreString()
+{
+	scoreTxt.setString(std::to_string(score[0]) + " : " + std::to_string(score[1]));
+	scoreTxt.setPosition((gameWidth * .5f) - (scoreTxt.getLocalBounds().width * .5f), 10);
+}
 
 bool inRange(float range, Vector2f pos1, Vector2f pos2)
 {
@@ -134,6 +144,15 @@ void collisions()
 	if (curPos.x < ballRad || curPos.x > gameWidth-ballRad) //left or right
 	{
 		resetBall();
+		if (curPos.x < gameWidth/2.f)
+		{
+			score[1]++;
+		}
+		else
+		{
+			score[0]++;
+		}
+		updateScoreString();
 	}
 
 	//paddle collision
@@ -164,6 +183,18 @@ void collisions()
 
 void init()
 {
+	//ini score
+	for (int &s : score)
+	{
+		s = 0;
+	}
+
+	//load font
+	font.loadFromFile("Debug/res/fonts/pixel.ttf");
+	scoreTxt.setFont(font);
+	scoreTxt.setCharacterSize(25);
+	updateScoreString();
+
 	//set paddle size and origin
 	for (RectangleShape &p : paddles)
 	{
@@ -184,6 +215,7 @@ void init()
 
 void update(float dt) 
 {
+
 	if(TimeSlow(70.f))
 	{
 		dt *= 0.5f;
@@ -199,6 +231,7 @@ void update(float dt)
 
 void render(RenderWindow &window) 
 {
+	window.draw(scoreTxt);
 	for (RectangleShape &p : paddles)
 	{
 		window.draw(p);

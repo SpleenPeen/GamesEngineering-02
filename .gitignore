@@ -3,6 +3,8 @@
 
 /out/*
 
+CMakePresets.json
+
 ### C++ ###
 # Prerequisites
 *.d

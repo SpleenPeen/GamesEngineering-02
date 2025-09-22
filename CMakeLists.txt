@@ -19,3 +19,16 @@ link_directories("${CMAKE_BINARY_DIR}/lib/SFML/lib")
 add_executable(lab_2 main.cpp)
 target_include_directories(lab_2 PRIVATE ${SFML_INCS})
 target_link_libraries(lab_2 sfml-graphics)
+
+set_target_properties(lab_2 
+    PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY
+    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$(Configuration)
+)
+
+add_custom_target(copy_resources ALL COMMAND ${CMAKE_COMMAND} 
+  -E copy_directory
+    "${PROJECT_SOURCE_DIR}/res"
+    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIGURATION>/res
+)
+
+add_dependencies(lab_2 copy_resources)
